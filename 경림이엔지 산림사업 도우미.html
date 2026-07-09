@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>산림사업 설계·감리 통합 패널</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+  :root{
+    --bg:#0b0d0c; --surface:#121514; --surface2:#171b19;
+    --line:#242927; --line-soft:#1c211f;
+    --ink:#e8eae8; --ink-2:#c3c9c4; --muted:#7d857f;
+    --accent:#5eb98a; --accent-dim:rgba(94,185,138,.09);
+    --accent-btn:#1e5c3e; --accent-btn-h:#25714d;
+    --danger:#d97b6f; --field:#0e1110;
+    --law:#6ba3d9; --law-dim:rgba(107,163,217,.1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{font-family:'Noto Sans KR','맑은 고딕',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;padding:0 0 72px;font-size:15px}
+  .wrap{max-width:780px;margin:0 auto;padding:0 16px}
+  .num{font-variant-numeric:tabular-nums}
+
+  header{border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:10}
+  .h-top{padding:18px 0 12px}
+  .kicker{font-size:10.5px;letter-spacing:.22em;color:var(--muted);font-weight:600;margin-bottom:3px}
+  h1{font-size:18px;font-weight:700;letter-spacing:-.01em}
+  .tabs{display:flex;gap:20px;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{padding:0 1px 11px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;background:none;color:var(--muted);border:none;border-bottom:2px solid transparent;white-space:nowrap}
+  .tab.on{color:var(--ink);border-bottom-color:var(--accent)}
+
+  .panel{display:none}
+  .panel.on{display:block}
+
+  section{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-top:16px;overflow:hidden}
+  .sec-head{display:flex;align-items:baseline;gap:8px;padding:14px 18px 12px;border-bottom:1px solid var(--line-soft)}
+  .sec-head h2{font-size:14px;font-weight:700}
+  .sec-head .opt{font-size:11.5px;color:var(--muted);font-weight:500;margin-left:auto}
+  .sec-body{padding:16px 18px 18px}
+
+  label{display:block;font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.04em;margin:14px 0 6px}
+  label:first-child{margin-top:0}
+  input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14.5px;background:var(--field);color:var(--ink)}
+  select option{background:var(--field)}
+  input::placeholder,textarea::placeholder{color:#525a55}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+  textarea{min-height:92px;resize:vertical;line-height:1.65}
+  .hint{font-size:12px;color:var(--muted);margin-top:7px;line-height:1.55}
+
+  .seg{display:flex;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:3px;gap:3px}
+  .seg button{flex:1;padding:8px 4px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);border:none;border-radius:6px}
+  .seg button.on{background:var(--accent-btn);color:#e9f7ef}
+  .seg.law button.on{background:#25506f;color:#e6f0fa}
+
+  .std-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .std-grid .full{grid-column:1/-1}
+  .std-note{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.55;border-left:2px solid var(--line);padding-left:10px}
+
+  .agg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+  @media(max-width:440px){.agg{grid-template-columns:1fr}}
+  .agg-item{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:12px 12px 10px}
+  .agg-item .k{font-size:11px;color:var(--muted);font-weight:600}
+  .agg-item .v{font-size:17px;font-weight:700;margin-top:2px}
+  .agg-item .p{font-size:12px;color:var(--accent);font-weight:600}
+
+  .tbl-wrap{border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:4px;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{background:var(--surface2);color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.04em;padding:9px 6px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{border-bottom:1px solid var(--line-soft);padding:0}
+  tbody tr:last-child td{border-bottom:1px solid var(--line)}
+  td input,td select{border:none;border-radius:0;padding:10px 6px;font-size:14px;text-align:center;background:transparent;box-shadow:none}
+  td select{appearance:none;text-align-last:center}
+  td input:focus,td select:focus{background:var(--accent-dim);box-shadow:none}
+  .cnt input{font-weight:700;color:var(--accent)}
+  .del-btn{width:100%;height:100%;min-height:40px;border:none;background:none;color:#6a5450;font-size:15px;cursor:pointer}
+  .del-btn:hover{color:var(--danger)}
+  .tfoot td{background:var(--surface2);font-weight:700;text-align:center;padding:9px 6px;font-size:13.5px;color:var(--ink-2);border-bottom:none}
+  .tfoot td .num{color:var(--accent)}
+  .add-row{margin-top:10px;width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink-2);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+  .add-row:hover{border-color:var(--accent);color:var(--accent)}
+
+  .ref td{padding:8px 10px;font-size:13px;color:var(--ink-2);text-align:center}
+  .ref td:first-child{text-align:left;font-weight:600;color:var(--ink)}
+  .ref-src{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5}
+
+  .run{width:100%;margin-top:16px;padding:14px;background:var(--accent-btn);color:#e9f7ef;border:none;border-radius:9px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.02em}
+  .run:hover{background:var(--accent-btn-h)}
+  .run:disabled{background:#20302a;color:#5f6f66;cursor:wait}
+  .run.law{background:#25506f}
+  .run.law:hover{background:#2d6089}
+
+  .out-row{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .out-row .lbl{font-size:11.5px;font-weight:600;color:var(--muted);flex:none;width:56px}
+  .out-row .seg{flex:1;min-width:180px}
+
+  .result-sec{display:none}
+  .result-box{white-space:pre-wrap;font-size:14px;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:15px;min-height:56px;line-height:1.7;overflow-x:auto}
+  .result-box table{font-size:13px;white-space:normal;margin:4px 0}
+  .result-box th,.result-box td{padding:7px 9px;text-align:left}
+  .result-tools{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .tool-btn{flex:1;min-width:90px;padding:10px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink-2);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+  .tool-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .tool-btn.primary{border-color:var(--accent-btn);color:var(--accent)}
+  .loading{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13.5px}
+  .spin{width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp .9s linear infinite;flex:none}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media(prefers-reduced-motion:reduce){.spin{animation:none}}
+  .err{color:var(--danger);font-size:13.5px}
+
+  .quick{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+  .quick button{border:1px solid var(--line);background:var(--field);color:var(--ink-2);border-radius:999px;padding:7px 13px;font:inherit;font-size:12.5px;cursor:pointer;width:auto}
+  .quick button:hover{border-color:var(--accent);color:var(--accent)}
+  .quick.law button:hover{border-color:var(--law);color:var(--law)}
+
+  .kb-search{position:relative}
+  .kb-search input{padding-left:12px}
+  .src-badge{display:inline-block;font-size:10.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:2px 7px;margin-top:10px}
+  footer{margin-top:26px;text-align:center;font-size:11px;color:#565e58}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="h-top">
+      <div class="kicker">FOREST DESIGN · SUPERVISION</div>
+      <h1>산림사업 설계·감리 통합 패널</h1>
+    </div>
+    <nav class="tabs">
+      <button class="tab on" data-p="p1">표준지 산정</button>
+      <button class="tab" data-p="p5">용역비 산정</button>
+      <button class="tab" data-p="p4">품셈·지침 질의</button>
+      <button class="tab" data-p="p6">임도</button>
+      <button class="tab" data-p="p2">산지일시사용</button>
+      <button class="tab" data-p="p3">기준 자료실</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ═══════ 패널 1 : 설계·감리 산정 ═══════ -->
+<div class="panel on" id="p1">
+  <section>
+    <div class="sec-head"><h2>표준지 자동 산정</h2><span class="opt">숲가꾸기 설계·감리 및 사업시행 지침</span></div>
+    <div class="sec-body">
+      <div class="std-grid">
+        <div class="full">
+          <label>구분</label>
+          <div class="seg" id="modeSeg">
+            <button class="on" data-m="설계">설계</button>
+            <button data-m="감리">감리</button>
+          </div>
+        </div>
+        <div class="full">
+          <label>사업종</label>
+          <select id="preset" onchange="applyPreset()">
+            <option value="풀베기">풀베기</option>
+            <option value="덩굴제거">덩굴제거</option>
+            <option value="어린나무가꾸기">어린나무가꾸기</option>
+            <option value="솎아베기">솎아베기(큰나무가꾸기)</option>
+            <option value="천연림보육">천연림보육</option>
+            <option value="산불예방숲가꾸기">산불예방 숲가꾸기</option>
+            <option value="조림">조림</option>
+            <option value="산림조사">산림조사(재적)</option>
+          </select>
+        </div>
+        <div>
+          <label for="rate">조사비율 (%)</label>
+          <input type="number" id="rate" min="0" step="0.05" oninput="recalcAll()">
+        </div>
+        <div>
+          <label for="plotSize">표준지 크기 (㎡)</label>
+          <input type="number" id="plotSize" min="1" step="50" oninput="recalcAll()">
+        </div>
+        <div class="full">
+          <label for="area">사업면적 (ha)</label>
+          <input type="number" id="area" min="0" step="0.1" placeholder="0.0" oninput="recalcAll()">
+        </div>
+      </div>
+
+      <div class="agg">
+        <div class="agg-item"><div class="k">표준지 개소수</div><div class="v num" id="outCnt">–</div><div class="p">최소 2개소</div></div>
+        <div class="agg-item"><div class="k">조사면적</div><div class="v num" id="outSurvey">–</div><div class="p num" id="outRatio">–</div></div>
+        <div class="agg-item"><div class="k">표준지 규격</div><div class="v num" id="outSize">–</div><div class="p" id="outShape">–</div></div>
+      </div>
+      <div class="std-note" id="stdNote"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>요청</h2></div>
+    <div class="sec-body">
+      <div class="quick" id="quick1">
+        <button data-q="위 산정 결과를 반영해 설계설명서의 표준지 조사계획 문구를 작성해줘">설계설명서 문구</button>
+        <button data-q="위 조건으로 감리보고서(중간)의 표준지 조사 및 공정현황 문구를 작성해줘">감리보고서 문구</button>
+        <button data-q="이 사업종의 검측·기성 확인 시 점검해야 할 항목을 체크리스트로 정리해줘">검측 체크리스트</button>
+        <button data-q="이 사업종에 적용되는 할인·할증 요소와 대표 적용값을 정리해줘">할인·할증 정리</button>
+      </div>
+      <textarea id="detail1" placeholder="예) 어린나무가꾸기 유령림단계 ha당 소요인력과 재료비 산출근거를 정리해줘&#10;예) 풀베기 둘레베기와 모두베기의 품 차이와 적용 조건을 설명해줘"></textarea>
+      <div class="out-row">
+        <span class="lbl">출력</span>
+        <div class="seg" id="outSeg1"><button class="on" data-o="text">텍스트</button><button data-o="xlsx">표·엑셀</button></div>
+      </div>
+      <div class="out-row">
+        <span class="lbl">웹검색</span>
+        <div class="seg" id="webSeg1"><button class="on" data-w="off">내장 지식</button><button data-w="on">최신 검색</button></div>
+      </div>
+      <div class="hint">기본은 내장된 산림품셈·지침 데이터로 즉시 답합니다. 개정 확인이 필요하면 "최신 검색"으로 전환하세요.</div>
+      <button class="run" id="runBtn1" onclick="run(1)">실행</button>
+    </div>
+  </section>
+
+  <section class="result-sec" id="resultSec1">
+    <div class="sec-head"><h2>결과</h2></div>
+    <div class="sec-body">
+      <div class="result-box" id="resultBox1"></div>
+      <div class="result-tools">
+        <button class="tool-btn" onclick="copyResult(1)" id="copyBtn1">복사</button>
+        <button class="tool-btn primary" id="xlsxBtn1" style="display:none" onclick="downloadXlsx(1)">엑셀 다운로드</button>
+        <button class="tool-btn" onclick="run(1)">다시 생성</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════ 패널 5 : 용역비 산정 ═══════ -->
+<div class="panel" id="p5">
+  <section>
+    <div class="sec-head"><h2>설계·감리 용역비 산정</h2><span class="opt">산림기술용역 대가 기준</span></div>
+    <div class="sec-body">
+      <div class="std-grid">
+        <div class="full">
+          <label>용역 구분</label>
+          <div class="seg" id="feeModeSeg">
+            <button class="on" data-m="설계">실시설계</button>
+            <button data-m="감리">감리</button>
+          </div>
+        </div>
+        <div class="full">
+          <label>사업종</label>
+          <select id="feeJob" onchange="feeCalc()">
+            <option value="풀베기">풀베기</option>
+            <option value="덩굴제거">덩굴제거</option>
+            <option value="어린나무가꾸기">어린나무가꾸기</option>
+            <option value="숲가꾸기">숲가꾸기(솎아베기)</option>
+            <option value="조림">조림</option>
+          </select>
+        </div>
+        <div>
+          <label for="feeArea">사업면적 (ha)</label>
+          <input type="number" id="feeArea" min="0" step="0.1" placeholder="0.0" oninput="feeCalc()">
+        </div>
+        <div>
+          <label for="feeSurcharge">할증률 합계 (%)</label>
+          <input type="number" id="feeSurcharge" min="0" step="1" value="0" oninput="feeCalc()">
+        </div>
+      </div>
+      <div class="std-note" id="feeNote"></div>
+
+      <div class="out-row" style="margin-top:14px">
+        <span class="lbl">노임</span>
+        <div class="seg" id="feeWageSeg"><button class="on" data-y="2023">2023 기준</button><button data-y="custom">직접입력</button></div>
+      </div>
+      <div class="std-grid" id="feeWageCustom" style="display:none;margin-top:6px">
+        <div><label for="feeHigh">고급기술자 (원/일)</label><input type="number" id="feeHigh" value="280031" oninput="feeCalc()"></div>
+        <div><label for="feeLow">초급기술자 (원/일)</label><input type="number" id="feeLow" value="202067" oninput="feeCalc()"></div>
+      </div>
+
+      <div class="tbl-wrap" style="margin-top:14px"><table id="feeTable">
+        <thead><tr><th style="text-align:left;padding-left:10px">업무 구분</th><th>품(인/ha)</th><th>인력</th><th>금액(원)</th></tr></thead>
+        <tbody id="feeRows"></tbody>
+        <tfoot><tr class="tfoot"><td colspan="3" style="text-align:right;padding-right:12px">직접인건비 소계</td><td><span class="num" id="feeDirect">0</span></td></tr></tfoot>
+      </table></div>
+
+      <div class="agg" style="margin-top:14px">
+        <div class="agg-item"><div class="k">순원가</div><div class="v num" id="feeNet">0 원</div><div class="p">인건비+제경비+기술료</div></div>
+        <div class="agg-item"><div class="k">부가세 포함</div><div class="v num" id="feeVat">0 원</div><div class="p">총원가×1.1</div></div>
+        <div class="agg-item"><div class="k">최종 (천원 절사)</div><div class="v num" id="feeFinal">0 원</div><div class="p">용역비</div></div>
+      </div>
+      <div class="ref-src" id="feeCalcNote">제경비=직접인건비×110%, 기술료=(직접인건비+제경비)×20%. 손해배상보험공제료는 별도이며 본 산정에는 미포함(개략 산정용).</div>
+
+      <div class="quick" id="quick5" style="margin-top:14px">
+        <button data-q="위 용역비 산정 근거를 업무구분별 품·인력·금액이 드러나는 표로 정리해줘">산정근거 표</button>
+        <button data-q="이 사업종 설계용역의 업무 흐름(사전조사→표준지조사→설계도서작성)과 각 단계 품 기준을 설명해줘">업무 흐름 설명</button>
+        <button data-q="이 사업종의 집단화 정도 할증 계산 방법과 적용 예시를 알려줘">집단화 할증 계산법</button>
+      </div>
+      <textarea id="detail5" placeholder="예) 100ha 어린나무가꾸기 실시설계, 6~9월 시행, 20개소 분산일 때 용역비 산출근거를 표로 만들어줘&#10;예) 설계표준지와 감리표준지의 표시방법(테이프 색·겹수) 차이를 정리해줘"></textarea>
+      <div class="out-row">
+        <span class="lbl">출력</span>
+        <div class="seg" id="outSeg5"><button class="on" data-o="text">텍스트</button><button data-o="xlsx">표·엑셀</button></div>
+      </div>
+      <div class="out-row">
+        <span class="lbl">웹검색</span>
+        <div class="seg" id="webSeg5"><button class="on" data-w="off">내장 지식</button><button data-w="on">최신 검색</button></div>
+      </div>
+      <button class="run" id="runBtn5" onclick="run(5)">질의</button>
+      <div class="src-badge">내장: 산림기술용역 대가 기준 [별표1·3·4·5·6] 설계·감리용역 표준품셈 · 노임 2023 기준</div>
+    </div>
+  </section>
+
+  <section class="result-sec" id="resultSec5">
+    <div class="sec-head"><h2>결과</h2></div>
+    <div class="sec-body">
+      <div class="result-box" id="resultBox5"></div>
+      <div class="result-tools">
+        <button class="tool-btn" onclick="copyResult(5)" id="copyBtn5">복사</button>
+        <button class="tool-btn primary" id="xlsxBtn5" style="display:none" onclick="downloadXlsx(5)">엑셀 다운로드</button>
+        <button class="tool-btn" onclick="run(5)">다시 생성</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════ 패널 4 : 품셈·지침 질의 ═══════ -->
+<div class="panel" id="p4">
+  <section>
+    <div class="sec-head"><h2>품셈·지침 질의</h2><span class="opt">내장 DB + 최신 검색</span></div>
+    <div class="sec-body">
+      <div class="quick" id="quick4">
+        <button data-q="어린나무가꾸기 치수림·유령림 단계별 ha당 소요인력을 표로 정리해줘">어린나무가꾸기 품</button>
+        <button data-q="풀베기 둘레베기·줄베기·모두베기의 소요인력과 조림 경과연수별 기준을 표로 정리해줘">풀베기 품</button>
+        <button data-q="솎아베기 경급별(흉고직경) 체인톱 소요인력을 표로 정리해줘">솎아베기 경급별 품</button>
+        <button data-q="숲가꾸기 할인·할증 요소(1-4-1~1-4-16)와 대표 적용값을 표로 정리해줘">할인·할증표</button>
+        <button data-q="가지치기·수형교정 수종별 높이별 소요인력을 표로 정리해줘">가지치기 품</button>
+        <button data-q="덩굴제거(덩굴걷기·약제살포·소금처리·뿌리제거) 소요인력과 대상지 유형을 정리해줘">덩굴제거 품</button>
+        <button data-q="조림(예정지정리·식재)의 소요인력과 재료 기준을 정리해줘">조림 품</button>
+        <button data-q="체인톱·예취기 재료(휘발유·오일) 소요량 기준을 정리해줘">기계 재료비</button>
+      </div>
+      <textarea id="detail4" placeholder="예) 소나무 가지치기를 1~3m 실시할 때 소요인력 산출 방법을 알려줘&#10;예) 덩굴 피복도 60~80%일 때 뿌리제거 환산본수와 할증률은?"></textarea>
+      <div class="out-row">
+        <span class="lbl">출력</span>
+        <div class="seg" id="outSeg4"><button class="on" data-o="text">텍스트</button><button data-o="xlsx">표·엑셀</button></div>
+      </div>
+      <div class="out-row">
+        <span class="lbl">웹검색</span>
+        <div class="seg" id="webSeg4"><button class="on" data-w="off">내장 지식</button><button data-w="on">최신 검색</button></div>
+      </div>
+      <button class="run" id="runBtn4" onclick="run(4)">질의</button>
+      <div class="src-badge">내장: 산림사업 표준품셈 · 숲가꾸기 설계감리 지침 · 어린나무가꾸기 지침</div>
+    </div>
+  </section>
+
+  <section class="result-sec" id="resultSec4">
+    <div class="sec-head"><h2>결과</h2></div>
+    <div class="sec-body">
+      <div class="result-box" id="resultBox4"></div>
+      <div class="result-tools">
+        <button class="tool-btn" onclick="copyResult(4)" id="copyBtn4">복사</button>
+        <button class="tool-btn primary" id="xlsxBtn4" style="display:none" onclick="downloadXlsx(4)">엑셀 다운로드</button>
+        <button class="tool-btn" onclick="run(4)">다시 생성</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════ 패널 6 : 임도 ═══════ -->
+<div class="panel" id="p6">
+  <section>
+    <div class="sec-head"><h2>현장 계산기</h2><span class="opt">횡단·종단·경사</span></div>
+    <div class="sec-body">
+
+      <!-- 계산기 선택 -->
+      <div class="seg" id="imdoCalcSeg">
+        <button class="on" data-c="cross">횡단(절·성토)</button>
+        <button data-c="grade">종단 표고차</button>
+        <button data-c="pct">경사 %↔도</button>
+      </div>
+
+      <!-- 횡단 계산 -->
+      <div id="calcCross" style="margin-top:14px">
+        <div class="std-grid">
+          <div><label for="crB">기준값 B (경사면 빗변, m)</label><input type="number" id="crB" step="0.1" placeholder="3.0" oninput="calcCross()"></div>
+          <div><label for="crN">경사비 1 : n</label><input type="number" id="crN" step="0.1" placeholder="0.5" oninput="calcCross()"></div>
+        </div>
+        <div class="agg" style="margin-top:12px">
+          <div class="agg-item"><div class="k">사면 높이 H</div><div class="v num" id="crH">–</div><div class="p">H=√(B²/(1+n²))</div></div>
+          <div class="agg-item"><div class="k">수평길이 L</div><div class="v num" id="crL">–</div><div class="p">L=H×n</div></div>
+          <div class="agg-item"><div class="k">경사비</div><div class="v num" id="crRatio">–</div><div class="p">1 : n</div></div>
+        </div>
+        <div class="ref-src">횡단면 절·성토 사면 산정: 빗변 기준값 B와 경사비 1:n으로 사면 높이(H)와 수평투영 길이(L)를 계산. 업로드하신 횡단계산 서식의 공식을 그대로 반영.</div>
+      </div>
+
+      <!-- 종단 표고차 -->
+      <div id="calcGrade" style="display:none;margin-top:14px">
+        <div class="std-grid">
+          <div><label for="grDist">수평거리 (m)</label><input type="number" id="grDist" step="1" placeholder="20" oninput="calcGrade()"></div>
+          <div><label for="grPct">종단경사 (%)</label><input type="number" id="grPct" step="0.1" placeholder="9" oninput="calcGrade()"></div>
+        </div>
+        <div class="agg" style="margin-top:12px">
+          <div class="agg-item"><div class="k">표고차</div><div class="v num" id="grRise">–</div><div class="p">거리×경사%÷100</div></div>
+          <div class="agg-item"><div class="k">사면거리</div><div class="v num" id="grSlope">–</div><div class="p">빗변 실거리</div></div>
+          <div class="agg-item"><div class="k">20m당 표고차</div><div class="v num" id="grPer20">–</div><div class="p">구간 누적용</div></div>
+        </div>
+        <div class="ref-src">종단경사(%)로 표고차 산정. 예: 수평 20m·종단 9% → 표고차 1.8m. 경사도임도 서식(20m 구간 누적)과 동일 로직.</div>
+      </div>
+
+      <!-- 경사 %↔도 -->
+      <div id="calcPct" style="display:none;margin-top:14px">
+        <div class="std-grid">
+          <div><label for="pcPct">경사 (%)</label><input type="number" id="pcPct" step="0.1" placeholder="9" oninput="calcPct('pct')"></div>
+          <div><label for="pcDeg">경사 (도°)</label><input type="number" id="pcDeg" step="0.1" placeholder="5.1" oninput="calcPct('deg')"></div>
+        </div>
+        <div class="agg" style="margin-top:12px">
+          <div class="agg-item"><div class="k">경사 %</div><div class="v num" id="pcOutPct">–</div><div class="p">rise/run×100</div></div>
+          <div class="agg-item"><div class="k">경사 도</div><div class="v num" id="pcOutDeg">–</div><div class="p">atan(%/100)</div></div>
+          <div class="agg-item"><div class="k">경사비 1:n</div><div class="v num" id="pcOutRatio">–</div><div class="p">수평:수직</div></div>
+        </div>
+        <div class="ref-src">경사 백분율(%)과 각도(°), 경사비(1:n)를 상호 변환. 한쪽 값을 입력하면 나머지가 자동 계산됩니다.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>임도 자료 검색</h2><span class="opt">법령·규정·시방서</span></div>
+    <div class="sec-body">
+      <div class="quick" id="quick6">
+        <button data-q="임도 구조기준(설계속도별 최소곡선반지름·종단기울기·횡단기울기·합성기울기)을 표로 정리해줘">구조기준 표</button>
+        <button data-q="임도의 설치 및 관리에 관한 법률의 임도 종류(국가·지방·민간임도)와 관할 행정청을 정리해줘">임도 종류·관할</button>
+        <button data-q="임도 노선 지정 고시 시 의제되는 인허가(산지일시사용·입목벌채 등)를 정리해줘">인허가 의제</button>
+        <button data-q="임도 설치 절차(전국임도계획→지역임도계획→예정노선→타당성평가→노선지정→설계·설치)를 단계별로 정리해줘">설치 절차</button>
+        <button data-q="임도시설공사 표준시방서의 주요 공종(토공·배수공·구조물공·노면공·사면보호공)을 정리해줘">시방서 공종</button>
+      </div>
+      <textarea id="detail6" placeholder="예) 설계속도 30km/h 일반지형 임도의 종단기울기 한계는?&#10;예) 합성기울기 계산 방법과 기준값을 알려줘"></textarea>
+      <div class="out-row">
+        <span class="lbl">출력</span>
+        <div class="seg" id="outSeg6"><button class="on" data-o="text">텍스트</button><button data-o="xlsx">표·엑셀</button></div>
+      </div>
+      <div class="out-row">
+        <span class="lbl">웹검색</span>
+        <div class="seg" id="webSeg6"><button class="on" data-w="off">내장 지식</button><button data-w="on">최신 검색</button></div>
+      </div>
+      <div class="hint">임도법·임도규정·시방서 내장 지식으로 답합니다. 시행령·시행규칙 세부 조문은 "최신 검색"으로 확인하세요.</div>
+      <button class="run" id="runBtn6" onclick="run(6)">자료 검색</button>
+      <div class="src-badge">내장: 임도의 설치 및 관리에 관한 법률 · 임도설치 및 관리 규정 · 임도시설공사 표준시방서</div>
+    </div>
+  </section>
+
+  <section class="result-sec" id="resultSec6">
+    <div class="sec-head"><h2>결과</h2></div>
+    <div class="sec-body">
+      <div class="result-box" id="resultBox6"></div>
+      <div class="result-tools">
+        <button class="tool-btn" onclick="copyResult(6)" id="copyBtn6">복사</button>
+        <button class="tool-btn primary" id="xlsxBtn6" style="display:none" onclick="downloadXlsx(6)">엑셀 다운로드</button>
+        <button class="tool-btn" onclick="run(6)">다시 생성</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════ 패널 2 : 산지일시사용 ═══════ -->
+<div class="panel" id="p2">
+  <section>
+    <div class="sec-head"><h2>대상 필지</h2><span class="opt">산지구분별 집계</span></div>
+    <div class="sec-body">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th style="width:38%">지번</th><th style="width:26%">지적면적(㎡)</th><th style="width:28%">산지구분</th><th style="width:8%"></th></tr></thead>
+          <tbody id="lotRows"></tbody>
+          <tfoot><tr class="tfoot"><td>합계</td><td><span class="num" id="lotSum">0</span></td><td colspan="2"></td></tr></tfoot>
+        </table>
+      </div>
+      <button class="add-row" onclick="addLot()">＋ 필지 추가</button>
+      <div class="agg">
+        <div class="agg-item"><div class="k">준보전산지</div><div class="v num" id="aggJun">0 ㎡</div><div class="p num" id="aggJunP">0%</div></div>
+        <div class="agg-item"><div class="k">임업용산지</div><div class="v num" id="aggIm">0 ㎡</div><div class="p num" id="aggImP">0%</div></div>
+        <div class="agg-item"><div class="k">공익용산지</div><div class="v num" id="aggGong">0 ㎡</div><div class="p num" id="aggGongP">0%</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>법령 실시간 검색</h2><span class="opt">국가법령정보센터 기준</span></div>
+    <div class="sec-body">
+      <div class="quick law" id="quick2">
+        <button data-q="산지관리법상 산지일시사용신고 대상 행위와 신고 절차를 조문 근거와 함께 정리해줘">일시사용신고 대상·절차</button>
+        <button data-q="산지일시사용신고 시 제출서류 목록을 산지관리법 시행규칙 기준으로 정리해줘">제출서류</button>
+        <button data-q="임업용산지·공익용산지에서 허용되는 행위 제한을 산지관리법 조문 근거로 비교해줘">보전산지 행위제한</button>
+        <button data-q="산지전용·일시사용 시 대체산림자원조성비 부과기준과 감면대상을 정리해줘">대체산림자원조성비</button>
+        <button data-q="산지일시사용 복구 및 복구비 예치 기준을 산지관리법 시행령 근거로 정리해줘">복구·복구비 예치</button>
+      </div>
+      <textarea id="detail2" placeholder="예) 위 필지들의 산지구분별 면적으로 산지일시사용신고서 기재 형식을 작성해줘&#10;예) 태양광 설치를 위한 산지일시사용 가능 여부와 조건을 알려줘"></textarea>
+      <div class="out-row">
+        <span class="lbl">출력</span>
+        <div class="seg" id="outSeg2"><button class="on" data-o="text">텍스트</button><button data-o="xlsx">표·엑셀</button></div>
+      </div>
+      <div class="out-row">
+        <span class="lbl">법령검색</span>
+        <div class="seg law" id="webSeg2"><button data-w="off">내장 지식</button><button class="on" data-w="on">실시간 검색</button></div>
+      </div>
+      <div class="hint">법령 질의는 기본적으로 국가법령정보센터(law.go.kr)를 실시간 검색해 조문·시행일 근거와 함께 답합니다.</div>
+      <button class="run law" id="runBtn2" onclick="run(2)">검색·작성</button>
+    </div>
+  </section>
+
+  <section class="result-sec" id="resultSec2">
+    <div class="sec-head"><h2>결과</h2></div>
+    <div class="sec-body">
+      <div class="result-box" id="resultBox2"></div>
+      <div class="result-tools">
+        <button class="tool-btn" onclick="copyResult(2)" id="copyBtn2">복사</button>
+        <button class="tool-btn primary" id="xlsxBtn2" style="display:none" onclick="downloadXlsx(2)">엑셀 다운로드</button>
+        <button class="tool-btn" onclick="run(2)">다시 생성</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════ 패널 3 : 기준 자료실 ═══════ -->
+<div class="panel" id="p3">
+  <section>
+    <div class="sec-head"><h2>자료 검색</h2><span class="opt">공종 선택 후 질의</span></div>
+    <div class="sec-body">
+      <label for="refJob">사업공종</label>
+      <select id="refJob" onchange="refJobChange()">
+        <option value="전체">전체 (공종 구분 없이)</option>
+        <option value="풀베기">풀베기</option>
+        <option value="덩굴제거">덩굴제거</option>
+        <option value="어린나무가꾸기">어린나무가꾸기</option>
+        <option value="솎아베기">솎아베기(큰나무가꾸기)</option>
+        <option value="천연림보육">천연림보육</option>
+        <option value="산불예방숲가꾸기">산불예방 숲가꾸기</option>
+        <option value="소나무재선충병">소나무재선충병 방제</option>
+        <option value="조림">조림</option>
+        <option value="가지치기">가지치기·수형교정</option>
+      </select>
+      <textarea id="detail3" style="margin-top:12px" placeholder="공종을 고른 뒤 궁금한 내용을 입력하세요&#10;예) 구획 방식에 대한 내용을 찾아줘&#10;예) 제거 대상목 판단 기준을 지침 근거로 정리해줘"></textarea>
+      <div class="quick" id="quick3" style="margin-top:10px"></div>
+      <div class="out-row">
+        <span class="lbl">출력</span>
+        <div class="seg" id="outSeg3"><button class="on" data-o="text">텍스트</button><button data-o="xlsx">표·엑셀</button></div>
+      </div>
+      <div class="out-row">
+        <span class="lbl">웹검색</span>
+        <div class="seg" id="webSeg3"><button class="on" data-w="off">내장 지식</button><button data-w="on">최신 검색</button></div>
+      </div>
+      <div class="hint">선택한 공종 범위에서 산림품셈·숲가꾸기 지침·설계감리 용역 품셈을 찾아 근거와 함께 답합니다. 내장 범위를 벗어나는 세부 조문은 "최신 검색"으로 확인하세요.</div>
+      <button class="run" id="runBtn3" onclick="run(3)">자료 검색</button>
+      <div class="src-badge">아래 요약표는 자주 쓰는 핵심값이며, 그 밖의 내용은 위 검색으로 질의</div>
+    </div>
+  </section>
+
+  <section class="result-sec" id="resultSec3">
+    <div class="sec-head"><h2>검색 결과</h2></div>
+    <div class="sec-body">
+      <div class="result-box" id="resultBox3"></div>
+      <div class="result-tools">
+        <button class="tool-btn" onclick="copyResult(3)" id="copyBtn3">복사</button>
+        <button class="tool-btn primary" id="xlsxBtn3" style="display:none" onclick="downloadXlsx(3)">엑셀 다운로드</button>
+        <button class="tool-btn" onclick="run(3)">다시 생성</button>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>표준지 조사 기준</h2><span class="opt">숲가꾸기 설계·감리 지침</span></div>
+    <div class="sec-body">
+      <div class="tbl-wrap"><table class="ref">
+        <thead><tr><th>사업종</th><th>설계 비율</th><th>감리 비율</th><th>표준지 크기</th></tr></thead>
+        <tbody>
+          <tr><td>풀베기</td><td>1% 이상</td><td>2% 이상</td><td>200㎡</td></tr>
+          <tr><td>덩굴제거</td><td>0.5% 이상</td><td>1% 이상</td><td>100㎡</td></tr>
+          <tr><td>어린나무가꾸기</td><td>0.5% 이상</td><td>0.5%</td><td>100㎡(10×10m)</td></tr>
+          <tr><td>솎아베기</td><td>1% 이상</td><td>0.5% 이상</td><td>100~400㎡</td></tr>
+        </tbody>
+      </table></div>
+      <div class="ref-src">재적조사 표준지 최대 0.04ha · 흉고직경 6㎝ 이상 2㎝ 괄약(지상고 120㎝) · 수고 m 단위 반올림 · 표준지 최소 2개소 배치</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>숲가꾸기 소요인력</h2><span class="opt">산림사업 표준품셈</span></div>
+    <div class="sec-body">
+      <div class="tbl-wrap"><table class="ref">
+        <thead><tr><th>공종 (품셈)</th><th>단위</th><th>소요인력</th></tr></thead>
+        <tbody>
+          <tr><td>어린나무가꾸기·치수림 (6-5)</td><td>인/ha</td><td>특별 3.0 + 보통 2.0</td></tr>
+          <tr><td>어린나무가꾸기·유령림 (6-5)</td><td>인/ha</td><td>특별 4.0 + 보통 2.0</td></tr>
+          <tr><td>풀베기·둘레베기 (6-2-1)</td><td>인/100본</td><td>보통 0.18</td></tr>
+          <tr><td>풀베기·줄베기 (6-2-2)</td><td>인/ha</td><td>예취기 1.5~2.5 + 묘목찾기 0.07</td></tr>
+          <tr><td>풀베기·모두베기 (6-2-3)</td><td>인/ha</td><td>당해 3.5·2년 4.0·3년+ 5.0</td></tr>
+          <tr><td>맹아제거 (6-3)</td><td>인/100본</td><td>보통 0.20</td></tr>
+          <tr><td>덩굴걷기·예취기 (6-4-1)</td><td>인/ha</td><td>특별 3.30</td></tr>
+          <tr><td>경계표시 (3-1)</td><td>인/a</td><td>보통 0.20</td></tr>
+          <tr><td>소작업로 (3-3)</td><td>인/km</td><td>2.0 (벌목·보통 50%)</td></tr>
+          <tr><td>대작업로 (3-3)</td><td>인/km</td><td>3.0 (벌목·보통 50%)</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>솎아베기 경급별 품</h2><span class="opt">체인톱 · 임내버림 기준</span></div>
+    <div class="sec-body">
+      <div class="tbl-wrap"><table class="ref">
+        <thead><tr><th>흉고직경</th><th>인/100본</th><th>비고</th></tr></thead>
+        <tbody>
+          <tr><td>8~10㎝</td><td>0.40</td><td rowspan="5">작업보조(보통) 0.60 별도<br>전간재 생산 시 별도 품</td></tr>
+          <tr><td>12~14㎝</td><td>0.60</td></tr>
+          <tr><td>16~18㎝</td><td>1.00</td></tr>
+          <tr><td>20~22㎝</td><td>1.20</td></tr>
+          <tr><td>24~26㎝</td><td>1.40</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>가지치기·수형교정</h2><span class="opt">품셈 6-6 · 인/100본</span></div>
+    <div class="sec-body">
+      <div class="tbl-wrap"><table class="ref">
+        <thead><tr><th>높이</th><th>소나무·낙엽송</th><th>잣·리기다</th><th>편백</th><th>활엽수</th></tr></thead>
+        <tbody>
+          <tr><td>0~1m</td><td>0.3</td><td>0.4</td><td>0.5</td><td>0.2</td></tr>
+          <tr><td>0~2m</td><td>0.6</td><td>0.8</td><td>1.0</td><td>0.3</td></tr>
+          <tr><td>0~4m</td><td>1.4</td><td>1.8</td><td>2.2</td><td>0.7</td></tr>
+          <tr><td>2~4m</td><td>0.8</td><td>1.0</td><td>1.2</td><td>0.4</td></tr>
+          <tr><td>4~6m</td><td>1.0</td><td>1.2</td><td>1.4</td><td>0.5</td></tr>
+        </tbody>
+      </table></div>
+      <div class="ref-src">구간이 표에 없으면 중간품 산출 (예: 소나무 1~3m = (0.6+1.4)/2 − 0.3 = 0.7인/100본)</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>주요 할인·할증</h2><span class="opt">품셈 1-4 · 부록1</span></div>
+    <div class="sec-body">
+      <div class="tbl-wrap"><table class="ref">
+        <thead><tr><th>요소</th><th>대표 조건</th><th>율</th></tr></thead>
+        <tbody>
+          <tr><td>작업시기 (1-4-1)</td><td>6~9월</td><td>+10%</td></tr>
+          <tr><td>조림후 경과연수 (1-4-2)</td><td>줄베기 2년차</td><td>+5%</td></tr>
+          <tr><td>집단화 정도 (1-4-3)</td><td>개소당 1~3ha 미만</td><td>+5%</td></tr>
+          <tr><td>경사도 (1-4-5)</td><td>중경사 15~30°</td><td>+5%</td></tr>
+          <tr><td>장애물 정도 (1-4-8)</td><td>가슴높이 미만 초본·관목</td><td>+5%</td></tr>
+          <tr><td>제거대상 피복도 (1-4-12)</td><td>대 71%↑ / 소 40%↓</td><td>+20% / −20%</td></tr>
+          <tr><td>규격재 생산 (1-4-16)</td><td>규격재 조재</td><td>+20%</td></tr>
+        </tbody>
+      </table></div>
+      <div class="ref-src">체인톱 재료(2-1-1): 휘발유 5.6ℓ/대/일(잡품 40%)·체인오일 2.1ℓ/대/일 / 예취기: 휘발유 5.0ℓ(잡품 10%). 노임단가 2025.6 기준. 개정 확인은 각 탭 "최신 검색" 이용.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>소나무재선충병 방제</h2><span class="opt">방제지침 · 2026.4.30 개정</span></div>
+    <div class="sec-body">
+      <div class="tbl-wrap"><table class="ref">
+        <thead><tr><th>벌채방법</th><th>주요 대상지</th><th>핵심 기준</th></tr></thead>
+        <tbody>
+          <tr><td>단목벌채</td><td>발생 모든 지역·산주 미동의</td><td>대상목만 벌채·후속처리 연계</td></tr>
+          <tr><td>강도간벌</td><td>밀도 높은 지역·반복피해·선단지</td><td>산불예방 간벌본수 준용(±30%)</td></tr>
+          <tr><td>소구역모두베기</td><td>신규·재발생·선단지</td><td>피해목 반경 20m 내외</td></tr>
+          <tr><td>소군락모두베기</td><td>농경지·생활권 주변</td><td>군락 0.3ha 이내</td></tr>
+          <tr><td>수종전환방제</td><td>특별방제구역·2년↑ 반복피해</td><td>구역 내 모든 소나무류 제거</td></tr>
+        </tbody>
+      </table></div>
+      <div class="ref-src">방제기간: 북방수염하늘소 8월~익년4월 · 혼생 9월~익년4월 · 솔수염하늘소 9월~익년5월. 방제대상목=피해고사목·기타고사목·비병징목(부후 심한 고사목 제외, 선단지는 포함). 나무주사 흉고 10cm 미만 제외 · 주입기 깊이 7~10cm(50cm 위치)·주입병 4~6cm(30~100cm). 감리는 비상주 원칙, 방제확인검사 전수. 세부 조문은 위 검색에서 "소나무재선충병 방제" 선택 후 질의.</div>
+    </div>
+  </section>
+</div>
+
+<footer>산정값·초안·검색결과는 참고용이며, 최종 검토 책임은 설계자·감리원에게 있음</footer>
+</div>
+
+<script>
+/* ═══════ 탭 ═══════ */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on');
+    document.getElementById(t.dataset.p).classList.add('on');
+  });
+});
+
+/* ═══════ 표준지 기준값 ═══════ */
+const STD = {
+  '설계': {
+    '풀베기':{rate:1.0,size:200,note:'설계: 조사비율 1% 이상 · 표준지 200㎡'},
+    '덩굴제거':{rate:0.5,size:100,note:'설계: 조사비율 0.5% 이상 · 표준지 100㎡'},
+    '어린나무가꾸기':{rate:0.5,size:100,note:'설계: 조사비율 0.5% 이상 · 표준지 100㎡(10×10m)'},
+    '솎아베기':{rate:1.0,size:400,note:'설계: 조사비율 1% 이상 · 표준지 100~400㎡'},
+    '천연림보육':{rate:1.0,size:400,note:'천연림보육: 솎아베기에 준함 · 유령림은 어린나무가꾸기 품 적용'},
+    '산불예방숲가꾸기':{rate:1.0,size:400,note:'산불예방 숲가꾸기: 큰나무가꾸기에 준함 · 과업지시서 확인'},
+    '조림':{rate:0.5,size:100,note:'조림: 식재본수 표준지 조사 · 지침 기준 확인'},
+    '산림조사':{rate:1.0,size:400,note:'재적조사: 표준지 최대 0.04ha, 흉고직경 6㎝↑ 2㎝ 괄약'}
+  },
+  '감리': {
+    '풀베기':{rate:2.0,size:200,note:'감리: 조사비율 2% 이상 · 표준지 200㎡'},
+    '덩굴제거':{rate:1.0,size:100,note:'감리: 조사비율 1% 이상 · 표준지 100㎡'},
+    '어린나무가꾸기':{rate:0.5,size:100,note:'감리: 조사비율 0.5% · 표준지 100㎡ — 2ha당 1개소'},
+    '솎아베기':{rate:0.5,size:400,note:'감리: 조사비율 0.5% 이상 · 표준지 100~400㎡'},
+    '천연림보육':{rate:0.5,size:400,note:'천연림보육 감리: 솎아베기에 준함'},
+    '산불예방숲가꾸기':{rate:0.5,size:400,note:'산불예방 숲가꾸기 감리: 큰나무가꾸기에 준함'},
+    '조림':{rate:0.5,size:100,note:'조림 감리: 식재본수 표준지 조사'},
+    '산림조사':{rate:1.0,size:400,note:'재적조사: 표준지 최대 0.04ha'}
+  }
+};
+const SHAPE={50:'5×10m',100:'10×10m',150:'r6.9m 원형',200:'r8.0m 원형',300:'r9.8m 원형',400:'20×20m'};
+const MIN_CNT=2;
+let mode='설계', calcResult=null;
+
+document.querySelectorAll('#modeSeg button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#modeSeg button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); mode=b.dataset.m; applyPreset();
+  });
+});
+
+function applyPreset(){
+  const s=STD[mode][document.getElementById('preset').value];
+  document.getElementById('rate').value=s.rate;
+  document.getElementById('plotSize').value=s.size;
+  document.getElementById('stdNote').textContent=s.note;
+  recalcAll();
+}
+
+function recalcAll(){
+  const rate=parseFloat(document.getElementById('rate').value);
+  const size=parseFloat(document.getElementById('plotSize').value);
+  const ha=parseFloat(document.getElementById('area').value);
+  document.getElementById('outSize').textContent=size?size.toLocaleString()+' ㎡':'–';
+  document.getElementById('outShape').textContent=SHAPE[size]||'규격 확인';
+  if(!ha||ha<=0||!rate||!size){
+    document.getElementById('outCnt').textContent='–';
+    document.getElementById('outSurvey').textContent='–';
+    document.getElementById('outRatio').textContent='–';
+    calcResult=null; return;
+  }
+  const cnt=Math.max(MIN_CNT,Math.ceil(ha*10000*(rate/100)/size));
+  const survey=cnt*size, ratio=survey/(ha*10000)*100;
+  document.getElementById('outCnt').textContent=cnt+' 개소';
+  document.getElementById('outSurvey').textContent=survey.toLocaleString()+' ㎡';
+  document.getElementById('outRatio').textContent='실제 '+ratio.toFixed(2)+'%';
+  calcResult={cnt,survey,ratio};
+}
+applyPreset();
+
+/* ═══════ 용역비 산정 (산림기술용역 대가 기준 별표) ═══════ */
+/* 품목: {name, unit(ha/건), qty(품 인/ha 또는 인/건), role(H고급/L초급/조=고+초)} */
+const FEE = {
+  '설계': {
+    '풀베기':[
+      {n:'사전조사·확인',q:0.05,r:'H'},
+      {n:'표준지조사(고급)',q:0.04,r:'H'},
+      {n:'표준지조사(초급)',q:0.04,r:'L'},
+      {n:'설계도·서작성',q:0.05,r:'H'}
+    ],
+    '덩굴제거':[
+      {n:'조사도면작성·현장확인',q:0.02,r:'H'},
+      {n:'덩굴본수조사(고급)',q:0.09,r:'H'},
+      {n:'덩굴본수조사(초급)',q:0.09,r:'L'},
+      {n:'피복도조사(고급)',q:0.05,r:'H'},
+      {n:'피복도조사(초급)',q:0.05,r:'L'},
+      {n:'설계도·서작성',q:0.05,r:'H'}
+    ],
+    '어린나무가꾸기':[
+      {n:'조사도면작성·현장확인',q:0.02,r:'H'},
+      {n:'표준지조사(고급)',q:0.05,r:'H'},
+      {n:'표준지조사(초급)',q:0.05,r:'L'},
+      {n:'설계도·서작성',q:0.05,r:'H'}
+    ],
+    '숲가꾸기':[
+      {n:'사전조사·확인',q:0.02,r:'H'},
+      {n:'구역확정·경계표시',q:0.20,r:'L'},
+      {n:'표준지조사(고급)',q:0.05,r:'H'},
+      {n:'표준지조사(초급)',q:0.05,r:'L'},
+      {n:'설계도·서작성',q:0.05,r:'H'}
+    ],
+    '조림':[
+      {n:'사전조사·확인',q:0.05,r:'H'},
+      {n:'예정지정리조사(고급)',q:0.10,r:'H'},
+      {n:'예정지정리조사(초급)',q:0.10,r:'L'},
+      {n:'설계도·서작성',q:0.20,r:'H'}
+    ]
+  },
+  '감리': {
+    '풀베기':[
+      {n:'설계표준지검토(고급)',q:0.01,r:'H'},
+      {n:'설계표준지검토(초급)',q:0.01,r:'L'},
+      {n:'설계도·서검토',q:0.01,r:'H'},
+      {n:'현장지도',q:0.03,r:'H'},
+      {n:'감리표준지조사(고급)',q:0.03,r:'H'},
+      {n:'감리표준지조사(초급)',q:0.03,r:'L'},
+      {n:'작업실행지검사(고급)',q:0.02,r:'H'},
+      {n:'작업실행지검사(초급)',q:0.02,r:'L'},
+      {n:'감리보고서작성',q:0.05,r:'H'},
+      {n:'전산시스템등록',q:0.01,r:'L'}
+    ],
+    '덩굴제거':[
+      {n:'설계표준지검토(고급)',q:0.01,r:'H'},
+      {n:'설계표준지검토(초급)',q:0.01,r:'L'},
+      {n:'설계도·서검토',q:0.01,r:'H'},
+      {n:'현장지도',q:0.03,r:'H'},
+      {n:'감리표준지조사(고급)',q:0.05,r:'H'},
+      {n:'감리표준지조사(초급)',q:0.05,r:'L'},
+      {n:'작업실행지검사(고급)',q:0.02,r:'H'},
+      {n:'작업실행지검사(초급)',q:0.02,r:'L'},
+      {n:'감리보고서작성',q:0.05,r:'H'},
+      {n:'전산시스템등록',q:0.01,r:'L'}
+    ],
+    '어린나무가꾸기':[
+      {n:'설계표준지검토(고급)',q:0.01,r:'H'},
+      {n:'설계표준지검토(초급)',q:0.01,r:'L'},
+      {n:'설계도·서검토',q:0.01,r:'H'},
+      {n:'현장지도',q:0.03,r:'H'},
+      {n:'감리표준지조사(고급)',q:0.03,r:'H'},
+      {n:'감리표준지조사(초급)',q:0.03,r:'L'},
+      {n:'작업실행지검사(고급)',q:0.02,r:'H'},
+      {n:'작업실행지검사(초급)',q:0.02,r:'L'},
+      {n:'감리보고서작성',q:0.05,r:'H'},
+      {n:'전산시스템등록',q:0.01,r:'L'}
+    ],
+    '숲가꾸기':[
+      {n:'설계표준지검토(고급)',q:0.01,r:'H'},
+      {n:'설계표준지검토(초급)',q:0.01,r:'L'},
+      {n:'설계도·서검토',q:0.01,r:'H'},
+      {n:'현장지도(고급)',q:0.03,r:'H'},
+      {n:'현장지도(초급)',q:0.03,r:'L'},
+      {n:'감리표준지조사(고급)',q:0.025,r:'H'},
+      {n:'감리표준지조사(초급)',q:0.025,r:'L'},
+      {n:'작업실행지검사(고급)',q:0.02,r:'H'},
+      {n:'작업실행지검사(초급)',q:0.02,r:'L'},
+      {n:'감리보고서작성',q:0.02,r:'H'},
+      {n:'전산시스템등록',q:0.01,r:'L'}
+    ],
+    '조림':[
+      {n:'설계서검토',q:0.05,r:'H'},
+      {n:'현장지도(예정지정리)',q:0.05,r:'H'},
+      {n:'현장지도(식재)',q:0.10,r:'H'},
+      {n:'예비준공(예정지정리-고급)',q:0.02,r:'H'},
+      {n:'예비준공(예정지정리-초급)',q:0.02,r:'L'},
+      {n:'예비준공(식재-고급)',q:0.05,r:'H'},
+      {n:'예비준공(식재-초급)',q:0.05,r:'L'},
+      {n:'예비준공(활착률-고급)',q:0.05,r:'H'},
+      {n:'예비준공(활착률-초급)',q:0.05,r:'L'},
+      {n:'감리보고서작성',q:0.02,r:'H'},
+      {n:'전산시스템등록',q:0.01,r:'L'}
+    ]
+  }
+};
+const FEE_NOTE = {
+  '설계':{
+    '풀베기':'설계 표준지조사 비율 1%(표준지 200㎡, 황색테이프). 조림 1년차 사전조사 적용.',
+    '덩굴제거':'본수조사 0.5%(50㎡)+피복도조사 0.5%(100㎡). 유형1·2에만 본수조사.',
+    '어린나무가꾸기':'표준지조사 0.5%(100㎡, 원형 r5.67m 또는 10×10m).',
+    '숲가꾸기':'실시설계 표준지 1%(400㎡). 구역확정·경계표시 별도(초급 0.20인/ha).',
+    '조림':'실시설계 표준지 1%(200㎡, 2ha미만 100㎡). 예정지정리조사 조당 0.1ha.'
+  },
+  '감리':{
+    '풀베기':'감리 표준지조사 비율 2%(200㎡, 적색테이프). 작업자교육 1회/건 별도.',
+    '덩굴제거':'감리 표준지 1%(100㎡). 뿌리제거지는 조사+검사 합산, 지상부만은 검사만.',
+    '어린나무가꾸기':'감리 표준지 0.5%(100㎡, 적색테이프). 표준지조사 0.03조/ha.',
+    '숲가꾸기':'감리 표준지 0.5%(400㎡). 일반감리 0.03조/ha. 작업자교육 별도.',
+    '조림':'감리 표준지 1%(소반·필지별 1개 이상). 예정지정리·식재·활착률 구분 검사.'
+  }
+};
+let feeMode='설계', feeWageYear='2023';
+
+document.querySelectorAll('#feeModeSeg button').forEach(b=>{
+  b.addEventListener('click',()=>{document.querySelectorAll('#feeModeSeg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');feeMode=b.dataset.m;feeCalc();});
+});
+document.querySelectorAll('#feeWageSeg button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#feeWageSeg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');feeWageYear=b.dataset.y;
+    document.getElementById('feeWageCustom').style.display=(feeWageYear==='custom')?'grid':'none';
+    feeCalc();
+  });
+});
+
+function feeCalc(){
+  const job=document.getElementById('feeJob').value;
+  const items=FEE[feeMode][job]||[];
+  const ha=parseFloat(document.getElementById('feeArea').value)||0;
+  const sur=(parseFloat(document.getElementById('feeSurcharge').value)||0)/100;
+  const H=feeWageYear==='custom'?(parseFloat(document.getElementById('feeHigh').value)||0):280031;
+  const L=feeWageYear==='custom'?(parseFloat(document.getElementById('feeLow').value)||0):202067;
+  document.getElementById('feeNote').textContent=(FEE_NOTE[feeMode][job]||'');
+
+  const tb=document.getElementById('feeRows'); tb.innerHTML='';
+  let direct=0;
+  items.forEach(it=>{
+    const wage=it.r==='L'?L:H;
+    const persons=ha*it.q;
+    const amt=Math.round(persons*wage*(1+sur));
+    direct+=amt;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="text-align:left;padding:8px 10px">${it.n}</td>
+      <td style="text-align:center">${it.q}</td>
+      <td style="text-align:center">${persons?persons.toFixed(2):'–'}</td>
+      <td style="text-align:right;padding-right:12px" class="num">${amt?amt.toLocaleString():'–'}</td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('feeDirect').textContent=direct.toLocaleString();
+
+  const overhead=Math.round(direct*1.10);        // 제경비
+  const tech=Math.round((direct+overhead)*0.20); // 기술료
+  const net=direct+overhead+tech;                // 순원가(직접경비 제외 개략)
+  const vat=Math.round(net*1.10);
+  const final=Math.floor(vat/1000)*1000;
+  document.getElementById('feeNet').textContent=net.toLocaleString()+' 원';
+  document.getElementById('feeVat').textContent=vat.toLocaleString()+' 원';
+  document.getElementById('feeFinal').textContent=final.toLocaleString()+' 원';
+}
+feeCalc();
+
+/* ═══════ 필지 표 ═══════ */
+function addLot(jb='',ar='',gu=''){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td><input type="text" class="jb" placeholder="○○리 산12" style="text-align:left;padding-left:10px" value="${jb}"></td>
+    <td><input type="number" class="ar" min="0" step="1" placeholder="0" value="${ar}"></td>
+    <td><select class="gu">
+      <option value=""${gu===''?' selected':''}>선택</option>
+      <option value="준보전산지"${gu==='준보전산지'?' selected':''}>준보전산지</option>
+      <option value="임업용산지"${gu==='임업용산지'?' selected':''}>임업용산지</option>
+      <option value="공익용산지"${gu==='공익용산지'?' selected':''}>공익용산지</option>
+    </select></td>
+    <td><button class="del-btn">×</button></td>`;
+  document.getElementById('lotRows').appendChild(tr);
+  tr.querySelector('.ar').addEventListener('input',refresh2);
+  tr.querySelector('.gu').addEventListener('change',refresh2);
+  tr.querySelector('.del-btn').addEventListener('click',()=>{tr.remove();refresh2();});
+  refresh2();
+}
+function refresh2(){
+  let total=0,jun=0,im=0,gong=0;
+  document.querySelectorAll('#lotRows tr').forEach(tr=>{
+    const a=parseFloat(tr.querySelector('.ar').value)||0, g=tr.querySelector('.gu').value;
+    total+=a;
+    if(g==='준보전산지')jun+=a; else if(g==='임업용산지')im+=a; else if(g==='공익용산지')gong+=a;
+  });
+  document.getElementById('lotSum').textContent=total.toLocaleString();
+  const pct=v=>total>0?(v/total*100).toFixed(1)+'%':'0%';
+  document.getElementById('aggJun').textContent=jun.toLocaleString()+' ㎡';
+  document.getElementById('aggJunP').textContent=pct(jun);
+  document.getElementById('aggIm').textContent=im.toLocaleString()+' ㎡';
+  document.getElementById('aggImP').textContent=pct(im);
+  document.getElementById('aggGong').textContent=gong.toLocaleString()+' ㎡';
+  document.getElementById('aggGongP').textContent=pct(gong);
+}
+addLot();
+
+/* ═══════ 기준 자료실 공종별 빠른질문 ═══════ */
+const REF_Q = {
+  '전체':[
+    ['설계·감리 표준지 비율','사업종별 설계·감리 표준지 조사 비율과 표준지 크기를 표로 정리해줘'],
+    ['표준지 표시방법','설계표준지와 감리표준지의 표시 방법(테이프 색·겹수·표시봉) 차이를 표로 정리해줘'],
+    ['할증 요소','숲가꾸기 할인·할증 요소와 대표 적용값을 표로 정리해줘'],
+    ['수량 계산기준','수고·경급·재적 표기법과 수량 계산 기준(반올림·괄약)을 정리해줘']
+  ],
+  '풀베기':[
+    ['둘레/줄/모두베기','둘레베기·줄베기·모두베기의 소요인력과 조림연차별 적용 기준을 표로 정리해줘'],
+    ['적용 시기','풀베기 각 공법의 적용 시기와 대상 조림연차를 정리해줘'],
+    ['조림목 본수 산정','풀베기 조림목 본수 산정 방법(천연치수 포함 기준)을 정리해줘'],
+    ['설계·감리 표준지','풀베기 설계·감리 표준지 비율과 표시방법을 정리해줘']
+  ],
+  '덩굴제거':[
+    ['대상지 유형','덩굴제거 대상지 유형1~4의 구분 기준과 유형별 적용 공정을 정리해줘'],
+    ['본수/피복도 조사','덩굴 본수조사와 피복도조사의 표준지 크기·비율·적용 대상을 표로 정리해줘'],
+    ['피복도→본수 환산','덩굴 피복도별 뿌리제거 환산본수와 할증률 환산표를 정리해줘'],
+    ['소요인력','덩굴걷기·약제살포·소금처리·뿌리제거 소요인력을 표로 정리해줘']
+  ],
+  '어린나무가꾸기':[
+    ['제거 대상목','어린나무가꾸기 제거 대상목의 종류와 판단 기준을 정리해줘'],
+    ['치수림/유령림','치수림단계와 유령림단계의 구분과 단계별 소요인력을 정리해줘'],
+    ['표준지 조사항목','어린나무가꾸기 표준지 조사항목(본수·경급·피복도·가지치기 높이)을 정리해줘'],
+    ['소작업로','소작업로 설치 기준(간격·폭·품)을 정리해줘']
+  ],
+  '솎아베기':[
+    ['미래목 선정','솎아베기 미래목·중간목·방해목 선정 기준을 정리해줘'],
+    ['경급별 품','솎아베기 흉고직경 경급별 체인톱 소요인력을 표로 정리해줘'],
+    ['산물수집','산물수집(재해예방/산물활용) 설계·감리 할증 기준을 정리해줘'],
+    ['나무선별 감리','나무선별 감리를 별도 발주할 때의 품 적용 방법을 정리해줘']
+  ],
+  '천연림보육':[
+    ['보육 대상·방법','천연림보육의 대상지와 보육 방법을 정리해줘'],
+    ['유령림 품 적용','천연림보육 유령림단계의 품 적용 기준을 정리해줘'],
+    ['솎아베기 준용','천연림보육에서 솎아베기 기준을 준용하는 범위를 정리해줘']
+  ],
+  '산불예방숲가꾸기':[
+    ['구획 방식','산불예방 숲가꾸기의 구획 방식과 대상지 기준을 정리해줘'],
+    ['수관소개·지타','산불예방을 위한 수관 소개(간격)와 지타(가지치기) 기준을 정리해줘'],
+    ['큰나무가꾸기 준용','산불예방 숲가꾸기의 큰나무가꾸기 준용 범위를 정리해줘']
+  ],
+  '소나무재선충병':[
+    ['벌채방법 구분','단목벌채·강도간벌·소구역모두베기·소군락모두베기·수종전환방제의 대상지와 작업방법을 표로 정리해줘'],
+    ['방제대상목','방제대상목(피해고사목·기타고사목·비병징목)의 정의와 포함·제외 기준을 정리해줘'],
+    ['방제기간','매개충 분포지역별(북방수염하늘소·솔수염하늘소) 방제기간을 정리해줘'],
+    ['나무주사','예방나무주사 대상목 선정과 약제주입기·주입병 천공 기준(직경·깊이·위치)을 정리해줘'],
+    ['감리 절차','재선충병 방제사업 감리 절차와 감리기준, 방제확인검사를 정리해줘'],
+    ['용어 정의','반출금지구역·선단지·피해고사목등 주요 용어를 정리해줘']
+  ],
+  '조림':[
+    ['예정지정리','조림 예정지정리 작업 내용과 소요인력을 정리해줘'],
+    ['식재 기준','식재 본수·방법과 소요인력, 표시봉 기준을 정리해줘'],
+    ['활착률 조사','조림 감리 활착률 조사 기준과 표준지 배치를 정리해줘'],
+    ['설계 표준지','조림 설계·감리 표준지 비율(200㎡, 2ha미만 100㎡)을 정리해줘']
+  ],
+  '가지치기':[
+    ['수종·높이별 품','가지치기 수종별 높이별 소요인력을 표로 정리해줘'],
+    ['중간품 산출','표에 없는 구간의 중간품 산출 방법을 예시로 알려줘'],
+    ['수형교정','활엽수 수형교정 품 적용 방법을 정리해줘']
+  ]
+};
+
+function refJobChange(){
+  const job=document.getElementById('refJob').value;
+  const box=document.getElementById('quick3');
+  box.innerHTML='';
+  (REF_Q[job]||REF_Q['전체']).forEach(([label,q])=>{
+    const b=document.createElement('button');
+    b.textContent=label;
+    b.dataset.q=(job==='전체'?'':job+' ')+q;
+    box.appendChild(b);
+  });
+}
+refJobChange();
+
+/* ═══════ 임도 현장 계산기 ═══════ */
+document.querySelectorAll('#imdoCalcSeg button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#imdoCalcSeg button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    document.getElementById('calcCross').style.display=(b.dataset.c==='cross')?'block':'none';
+    document.getElementById('calcGrade').style.display=(b.dataset.c==='grade')?'block':'none';
+    document.getElementById('calcPct').style.display=(b.dataset.c==='pct')?'block':'none';
+  });
+});
+
+function calcCross(){
+  const B=parseFloat(document.getElementById('crB').value);
+  const n=parseFloat(document.getElementById('crN').value);
+  if(!B||B<=0||isNaN(n)){document.getElementById('crH').textContent='–';document.getElementById('crL').textContent='–';document.getElementById('crRatio').textContent='–';return;}
+  const H=Math.sqrt((B*B)/(1+n*n));
+  const L=H*n;
+  document.getElementById('crH').textContent=H.toFixed(2)+' m';
+  document.getElementById('crL').textContent=L.toFixed(2)+' m';
+  document.getElementById('crRatio').textContent='1 : '+n;
+}
+
+function calcGrade(){
+  const d=parseFloat(document.getElementById('grDist').value);
+  const p=parseFloat(document.getElementById('grPct').value);
+  if(!d||d<=0||isNaN(p)){document.getElementById('grRise').textContent='–';document.getElementById('grSlope').textContent='–';document.getElementById('grPer20').textContent='–';return;}
+  const rise=d*p/100;
+  const slope=Math.sqrt(d*d+rise*rise);
+  const per20=20*p/100;
+  document.getElementById('grRise').textContent=rise.toFixed(2)+' m';
+  document.getElementById('grSlope').textContent=slope.toFixed(2)+' m';
+  document.getElementById('grPer20').textContent=per20.toFixed(2)+' m';
+}
+
+function calcPct(from){
+  const pctEl=document.getElementById('pcPct'), degEl=document.getElementById('pcDeg');
+  let pct, deg;
+  if(from==='pct'){
+    pct=parseFloat(pctEl.value);
+    if(isNaN(pct)){document.getElementById('pcOutPct').textContent='–';document.getElementById('pcOutDeg').textContent='–';document.getElementById('pcOutRatio').textContent='–';degEl.value='';return;}
+    deg=Math.atan(pct/100)*180/Math.PI;
+    degEl.value=deg.toFixed(2);
+  }else{
+    deg=parseFloat(degEl.value);
+    if(isNaN(deg)){document.getElementById('pcOutPct').textContent='–';document.getElementById('pcOutDeg').textContent='–';document.getElementById('pcOutRatio').textContent='–';pctEl.value='';return;}
+    pct=Math.tan(deg*Math.PI/180)*100;
+    pctEl.value=pct.toFixed(2);
+  }
+  document.getElementById('pcOutPct').textContent=pct.toFixed(2)+' %';
+  document.getElementById('pcOutDeg').textContent=deg.toFixed(2)+' °';
+  document.getElementById('pcOutRatio').textContent=(pct>0?'1 : '+(100/pct).toFixed(2):'–');
+}
+
+/* ═══════ 세그먼트 상태 ═══════ */
+const outMode={1:'text',2:'text',3:'text',4:'text',5:'text',6:'text'};
+const webMode={1:false,2:true,3:false,4:false,5:false,6:false};
+[1,2,3,4,5,6].forEach(n=>{
+  const os=document.getElementById('outSeg'+n);
+  if(os) os.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    os.querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); outMode[n]=b.dataset.o;
+  }));
+  const ws=document.getElementById('webSeg'+n);
+  if(ws) ws.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    ws.querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); webMode[n]=(b.dataset.w==='on');
+  }));
+});
+
+/* ═══════ 빠른 질문 칩 ═══════ */
+[1,2,3,4,5,6].forEach(n=>{
+  const q=document.getElementById('quick'+n);
+  if(q) q.addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b)return;
+    const ta=document.getElementById('detail'+n);
+    ta.value=b.dataset.q; ta.focus();
+  });
+});
+
+/* ═══════ 시스템 프롬프트 (지식 내장) ═══════ */
+const SYSTEM=`당신은 강원도 소재 엔지니어링사의 산림사업 설계·감리 및 산지일시사용 전문 보좌관이다. 설계와 감리의 실제 근거자료로 쓰이므로 수치는 반드시 정확해야 하며, 불확실하면 반드시 "관련 규정 확인 필요"로 명시하고 추측하지 않는다.
+
+[문체·형식]
+· 공문·보고서·설계설명서·신고서 문구 초안은 공공기관 관례에 따라 음슴체(–함, –임, –하고자 함)로 작성한다.
+· 실무 용어를 그대로 사용: 임소반, 표준지, 유령림, 치수림, 감리원, 기성, 착수계, 검측, 준보전산지, 임업용산지, 공익용산지.
+· 답변은 바로 복사해 쓸 수 있게 완성형으로, 불필요한 서두·맺음말 없이.
+
+[내장 지식 — 산림사업 표준품셈(노임 2025.6 기준)·숲가꾸기 설계감리 지침·어린나무가꾸기 지침. 아래 값을 정확히 인용하되, 세부·개정은 검색으로 보완]
+
+■ 표준지 조사(설계/감리): 풀베기 1%/2%·200㎡, 덩굴제거 0.5%/1%·100㎡, 어린나무가꾸기 0.5%/0.5%·100㎡(10×10m), 솎아베기 1%/0.5%·100~400㎡. 재적조사 표준지 최대 0.04ha, 흉고직경 6㎝↑ 2㎝ 괄약(지상 120㎝), 표준지 최소 2개소.
+
+■ 어린나무가꾸기(품셈 6-5, 인/ha): 특별인부(체인톱) 치수림 3.0·유령림 4.0, 보통인부(보조) 2.0. 천연림보육(유령림)은 유령림 품. 소작업로(20m 간격=1km/ha) 및 덩굴걷기 필요 시 별도. 할증: 작업시기(1-4-1)·집단화(1-4-3)·경사도(1-4-5)·제거대상피복도(1-4-12).
+
+■ 풀베기(품셈 6-2):
+· 둘레베기(6-2-1): 낫 0.18인/100본(보통). 조림목 반경 50㎝ 이내 식생 제거. 할증 경사도·집단화.
+· 줄베기(6-2-2): 묘목찾기 0.07인/100본 + 예취기 1,500본미만 1.5·1,500~3,000본 2.0·3,000본↑ 2.5 인/ha(특별). 폭 1m. 할증 경과연수(1-4-2)·집단화·경사도.
+· 모두베기(6-2-3): 묘목찾기 0.07인/100본 + 예취기 당해연도 3.5·2년차 4.0·3년차↑ 5.0 인/ha(특별). 할증 집단화·경사도.
+(주의: 품셈 예시 단가표의 둘레베기 예시는 0.18, 모두베기 예시는 예취기 3.10으로 표기된 판본도 있으므로, 소요인력표 6-2 기준을 우선하고 필요 시 확인 권고.)
+
+■ 맹아제거(6-3): 괭이·도끼 0.20인/100본(보통). 근원경 1㎝↑ 교목·아교목성 맹아. 당해연도 조림지 풀베기에만.
+
+■ 덩굴제거(6-4): 덩굴걷기(예취기) 3.30인/ha(특별). 약제살포 특별1.0+보통1.5 인/ha. 소금처리(주두부직경별) 0.20~0.60인/100본. 뿌리제거 1㎝미만 0.40·1~4㎝ 0.80·4㎝초과 1.20인/100본+표시 0.05. 대상지 유형1~4. 피복도→본수 환산표 있음.
+
+■ 솎아베기(임내버림, 인/100본): 8~10㎝ 0.40, 12~14㎝ 0.60, 16~18㎝ 1.00, 20~22㎝ 1.20, 24~26㎝ 1.40 + 작업보조 0.60. 경계표시 0.20인/a. 전간재 생산 시 규격재생산 할증(1-4-16) +20%.
+
+■ 가지치기(6-6, 인/100본): [0~1m] 소나무·낙엽송 0.3/잣·리기다 0.4/편백 0.5/활엽수 0.2, [0~2m] 0.6/0.8/1.0/0.3, [0~4m] 1.4/1.8/2.2/0.7, [2~4m] 0.8/1.0/1.2/0.4, [4~6m] 1.0/1.2/1.4/0.5. 표에 없는 구간은 중간품 산출.
+
+■ 작업로(3-3): 소작업로(폭1.5m) 2.0인/km, 대작업로(폭3.0m) 3.0인/km, 벌목부50%+보통50%. 경계표시(3-1) 0.20인/a.
+
+■ 조림: 예정지정리 7.0인/ha(특별·보통 각50%), 식재 4.0인/천본(특별30%·보통70%)+표시봉설치 0.70+소운반 0.40인/천본. 비료주기(6-1) 인공림10년이하 3.5·10년초과 4.5·천연림 4.5 인/100kg.
+
+■ 기계재료(2-1-1): 체인톱 휘발유 5.6ℓ/대/일(잡품 주연료비의 40%)·체인오일 2.1ℓ/대/일, 체인톱 대수=특별인부(벌목부) 100%(작업로설치 50%). 예취기 휘발유 5.0ℓ/대/일(잡품 10%), 1대1인.
+
+■ 대표 할인·할증: 작업시기 6~9월 +10% / 집단화 개소당 1~3ha미만 +5% / 중경사(15~30°) +5% / 장애물 가슴높이미만 초본관목 +5% / 제거대상피복도 대(71%↑) +20%·소(40%↓) −20% / 규격재생산 +20%. 적용공종은 부록1.
+
+■ 수량계산(1-2-1): 면적 ㎡ 기준(ha 환산 소수 셋째자리 반올림 둘째자리), 인원·재적 소수 둘째자리, 수고 표기 15/10~20, 경급 20/14~26.
+
+[내장 지식 2 — 산림기술용역 대가 기준 별표(설계·감리용역 표준품셈). 위 사업시행 품셈과 별개인 '용역비 산정' 기준. 노임 2023: 고급기술자 280,031원/일·초급기술자 202,067원/일. 원가구조: 제경비=직접인건비×110%, 기술료=(직접인건비+제경비)×20%, 부가세 10%, 손해배상보험공제료 별도. 할증 중복가산 W=P×(1+a1+…+an), 재료비는 할증 미적용]
+
+■ 공통 할증: 집단화정도=발주면적÷개소수(3ha↑ 0% / 1~3ha미만 +5% / 1ha미만 +10%, 사업지 간격 50m 이내는 동일 개소). 조사시기/설계시기(1~5월 0% / 10~12월 +5% / 6~9월 +10%; 숲가꾸기 설계는 10~11·3~4월 0%/12~2월 +5%/5~9월 +10%). 조림후경과연수(풀베기: 당해 0%/2년 +5%/3년↑ +10%). 표준지조사 할증율={(2년차면적×5%)+(3년차면적×10%)}÷총면적.
+
+■ 풀베기 설계(별표4): 사전조사·확인 0.05인/ha(고급, 20ha/일). 표준지조사 0.04조/ha(고급0.04+초급0.04, 표준지 200㎡·1%비율·황색테이프, 1일 12.5개/25ha). 설계도서작성 0.05인/ha(고급). 재료: 황색테이프 0.04Roll/10ha, 조림표시봉 2.5개/ha.
+■ 풀베기 감리(별표4): 설계표준지검토 0.01조/ha(20%이상 확인). 설계도서검토 0.01인/ha. 작업자교육 1인/건. 현장지도 0.03인/ha(고급, 33ha/일). 감리표준지조사 0.03조/ha(2%비율·적색테이프·200㎡ 20개/0.4ha). 작업실행지검사 0.02조/ha. 감리보고서작성 0.05인/ha. 전산등록 0.01인/ha(초급, 국유림 제외). 재료: 적색테이프 0.07Roll/ha, 표시봉 5개/ha.
+
+■ 덩굴제거 설계(별표5): 조사도면작성·현장확인 0.02인/ha(고급, 50ha/일). 덩굴본수조사 0.09조/ha(0.5%·50㎡ 반경4m원형 또는 5×10m·유형1,2만·11개/일). 피복도조사 0.05조/ha(0.5%·100㎡ 반경5.67m원형·10개/일). 설계도서작성 0.05인/ha(20ha/일).
+■ 덩굴제거 감리(별표5): 설계표준지검토 0.01조/ha. 설계도서검토 0.01인/ha. 작업자교육 1인/ha. 현장지도점검 0.03인/ha(33ha/일). 감리표준지조사 0.05조/ha(1%·100㎡·20개/0.2ha, 뿌리제거지는 조사+검사 합산, 지상부만은 검사만). 작업실행지검사 0.02조/ha. 감리보고서작성 0.05인/ha. 전산등록 0.01인/ha.
+
+■ 어린나무가꾸기 설계(별표6): 조사도면작성·현장확인 0.02인/ha(50ha/일). 표준지조사 0.05조/ha(0.5%·100㎡ 반경5.67m원형 또는 10×10m·조림목본수·경급·제거대상피복도·가지치기높이 조사·10개/일). 설계도서작성 0.05인/ha(20ha/일). 재료: 황색테이프 원형0.02·직방형0.04Roll/ha.
+■ 어린나무가꾸기 감리(별표6): 설계표준지확인 0.01조/ha. 설계서검토 0.02인/ha(고급). 작업자교육 1인/ha. 현장지도점검 0.03인/ha(33ha/일). 감리표준지조사 0.03조/ha(0.5%·100㎡·적색테이프·16.5개/일). 작업실행지검사 0.02조/ha. 감리보고서작성 0.05인/ha. 전산등록 0.01인/ha. 재료: 적색테이프 0.02Roll/ha.
+
+■ 숲가꾸기(솎아베기) 설계(별표3): 사전조사확인 실시설계 0.02인/ha(50ha/일). 구역확정·경계표시 0.20인/ha(초급, 흰색테이프 10m간격, 5ha/일). 표준지조사 실시설계 0.05조/ha(1%·400㎡·5개/0.2ha)·기본설계 0.005조(0.1%). 설계도서작성 실시설계 0.05인/ha(20ha/일)·기본설계 0.02. 산물수집 할증(재해예방 +10%·산물활용 +20%). 재료: 백색테이프 0.44Roll/10ha, 페인트 0.1ℓ/ha.
+■ 숲가꾸기 감리(별표3): 설계표준지확인 0.01조/ha(400㎡ 5개/일). 설계도서검토 0.01인/ha. 작업자교육 1인/건. 현장지도 일반감리 0.03조/ha(33ha/일)·나무선별감리 0.01조. 감리표준지조사 0.025조/ha(0.5%·400㎡ 20×20m·황색테이프·25ha/일). 작업실행지검사 0.02조/ha. 감리보고서작성 0.02인/ha(50ha/일). 전산등록 0.01인/ha. 재료: 황색테이프 0.03Roll/ha.
+
+■ 조림 설계(별표1): 사전조사 0.05인/ha(20ha/일). 예정지정리지조사 실시설계 0.1조/ha(1%·표준지 0.1ha/조)·기본설계 0.01조(0.1%). 설계도서작성 실시설계 0.2인/ha(5ha/일)·기본설계 0.1인. 집단화 할증(5ha↑ 0%·5ha미만 분산 +10%). 재료: 페인트 0.2ℓ/ha(본당 5㎖). 표준지 200㎡(2ha미만 100㎡).
+■ 조림 감리(별표1): 설계서검토 0.05인/ha(20ha/일). 작업자교육 1인/건. 현장지도 예정지정리 0.05조·식재 0.10조/ha. 예비준공검사 예정지정리 0.02조·식재 0.05조·조림감리표준지조사(활착률) 0.05조/ha(표준지 1%이상·소반/필지별 1개↑). 감리보고서작성 0.02인/ha(50ha/일). 전산등록 0.01인/ha.
+
+주의: 위 설계·감리 용역 품셈의 조사비율(설계 풀베기1%·솎아베기1%, 감리 풀베기2%·솎아베기0.5% 등)은 '용역대가 산정용 표준지 비율'이며, 실제 표준지 배치 개소수는 (면적×비율÷표준지크기)로 산정. 설계표준지=황색테이프, 감리표준지=적색테이프.
+
+■ 산지관리법 관련: 산지는 보전산지(임업용산지·공익용산지)와 준보전산지로 구분. 산지일시사용신고/허가, 산지전용신고/허가, 대체산림자원조성비, 복구비 예치 등은 산지관리법·시행령·시행규칙 근거. 구체 조문·부과기준·서식은 반드시 국가법령정보센터(law.go.kr) 최신본을 검색해 시행일과 함께 인용.
+
+[내장 지식 3 — 소나무재선충병 방제지침(2026.4.30 개정본 기준)]
+■ 용어: 반출금지구역=발생지역+2km 이내 행정동·리 전체. 피해고사목(감염·고사), 기타고사목(재선충 아니나 매개충 서식·산란 우려), 비병징목/비병징감염목, 피해고사목등=벌채대상(피해고사목+기타고사목+비병징목). 선단지=점형(반경2km)·선형(선단지선 양쪽2km)·광역선단지.
+■ 방제방법 구분: [예방사업] 예방(단제·합제)나무주사·토양약제주입·약제살포(정밀드론·지상, 유인헬기 중지)·매개충 유인트랩·피해우려 단순림관리. [피해고사목등 방제] 벌채방법=단목벌채/강도간벌/소구역모두베기/소군락모두베기/수종전환방제. 산물처리=파쇄·소각·매몰·박피·그물망피복·훈증·대용량훈증·제재·건조·열처리.
+■ 나무주사: 대상목은 감염 안 된 우량목, 흉고직경 10cm 미만·형질불량·쇠약목 제외. 약제주입기=지면 50cm 위 직경1cm·깊이7~10cm·45°(10~12cm목은 깊이6cm 이내·구멍수 증가). 약제주입병=지면 30~100cm·직경0.6cm·깊이4~6cm. 사업기간 11월~이듬해 3월말(합제는 2~3월). QR코드 표식라벨(별지28)·표지판(별지29). 표준지조사 실행 시 사업완료 후 전수조사로 사업량 확정, 선목은 설계 전수조사 품·대상목 주변 덩굴·잡관목 제거는 풀베기(둘레베기) 품 적용.
+■ 벌채방법 상세: (단목벌채) 재선충 발생 모든 지역·산주 미동의·경관관리 필요지, 벌채 후 20m 내외 잔존목 예방나무주사 가능. (강도간벌) 밀도 높은 지역·반복피해·선단지, 잔존본수는 「산불예방 숲가꾸기 사업 시행기준」의 간벌 후 입목본수 준용(±30% 조정), 제거순위=피해고사목→기타고사목→비병징목. (소구역모두베기) 신규·재발생·선단지·5km 이상 격리발생, 단목은 피해고사목 반경20m·군상은 감염목 연결선 외곽20m 모든 소나무류 벌채(반경 20m 내외 조정 가능), 반경100m(잣나무 200m) 나무주사 가능. (소군락모두베기) 농경지·생활권 주변, 군락 크기 0.3ha 이내. (수종전환방제) 특별방제구역·2년 이상 반출금지구역 반복피해지 등, 구역 내 모든 소나무류 제거, 피해고사목 150m 내 나무주사 가능. 벌채 후 미립목지는 다음연도 소나무류 아닌 수종 조림.
+■ 방제대상목: 피해고사목/기타고사목/비병징목(비병징감염목 포함). 심하게 부후되어 부서지는 고사목은 제외(단 선단지는 포함). 고사목은 수피이탈·낙엽·버섯·탈출공 확인과 무관하게 방제대상 포함.
+■ 방제기간(매개충 분포별): 북방수염하늘소 8월~이듬해 4월, 혼생지역 9월~이듬해 4월, 솔수염하늘소 9월~이듬해 5월. 기간 내 벌채+산물처리 완료 원칙.
+■ 감리: 적용대상=모든 방제 사업장(직영·용역), 생략 가능 조건 있으나 생략 시 방제확인검사 실시. 감리는 비상주감리 원칙(필요시 상주). 절차=①실시설계도서 수령·검토 ②사전조사(표준지/전수조사지 확인 포함) ③실시설계 사전검토보고서(별지20) ④작업자 기술·안전교육 ⑤현장지도 ⑥예비준공검사(경계·면적·본수·재적·약량 정산) ⑦방제확인검사(피해고사목등·훈증더미 전수 확인, 고사목 이력관리시스템 입력, 나무주사 등 현장지도 시 방제확인 포함되면 생략 가능) ⑧감리완료보고서. 감리기준=설계도서 적합성·약제 적정사용·법령/지침/설계도서 준수·안전관리·설계변경 필요성. 감리원 배치기준 별표15. 주요 감리서식: 실시설계 사전검토(20)·선목검토(21)·중간감리(22)·감리일지(23)·예비준공(방제확인)검사 결과(24)·감리완료(26).
+
+[검색 규칙] 웹 검색이 켜진 경우 법령·지침·고시는 국가법령정보센터(law.go.kr)·산림청(forest.go.kr)·산림청 훈령 원문을 우선하고, 근거(법령/지침명·조·항·호·시행일)를 함께 표기. 검색으로도 불확실하면 명시하고 추측 금지.
+
+[내장 지식 4 — 임도 법령·규정·구조기준]
+■ 임도의 설치 및 관리에 관한 법률(법률 제21626호, 2026.5.12 제정, 2027.5.13 시행): 종전 「산림자원의 조성 및 관리에 관한 법률」의 임도 규정이 이 법으로 독립. 임도=국가임도·지방임도·민간임도. 관할: 국가임도-산림청장, 지방임도-지자체장, 민간임도-시장군수구청장. 주요절차: 전국임도종합계획(10년)→지역임도계획(5년)→임도예정노선 선정→타당성평가→노선지정·고시→설계·설치. 노선지정 고시 시 인허가 의제(산지일시사용신고, 입목벌채허가, 하천·공유수면, 국계법 개발행위허가, 농지전용 등). 설계는 시공 직전년도까지 완료 원칙. 벌칙: 통행방해·임도파손 3년↓ 징역/3천만원↓ 벌금, 과태료 500만/200만원.
+■ 임도설치 및 관리 등에 관한 규정(산림청 훈령) 구조기준 — 설계속도별:
+· 최소곡선반지름: 설계속도 40km/h 일반 60m·특수 40m / 30km/h 일반 30m·특수 20m / 20km/h 일반 15m·특수 12m.
+· 종단기울기(순기울기): 40km/h 일반 7%↓·특수 10%↓ / 30km/h 일반 8%↓·특수 12%↓ / 20km/h 일반 9%↓·특수 14%↓. (특수지형 종단은 노면포장 시 18% 범위 조정 가능)
+· 횡단기울기: 비포장(쇄석·자갈 포함) 3~5%, 포장 1.5~2%.
+· 합성기울기: 12%↓ 원칙(불가피 시 15%↓, 노면포장 시 18%↓).
+· 종단곡선: 40km/h 반경 450m↑·길이 40m↑ (종단기울기 대수차 5%↓ 비포장은 미적용, 포물선곡선 가능).
+· 노폭확장=산불진화차량 진입 위해 기존 임도 폭 확장. 구조개량=대형산불지역 기존임도 기능개선.
+· 임도 부속물: 원표·이정표·거리표주·경계표주, 표지판·가드레일·반사경, 간이주차장, 방호울타리, 재해방지시설 등.
+■ 임도 횡단 계산(현장 실무): 절토/성토 사면 높이(H)·수평길이(L) 산정. 경사비(1:n) 기준 H=√(B²/(1+n²)), L=H×n (B=경사면 빗변 또는 폭 기준값). 종단경사 %기반 표고차: 수평거리 20m 구간마다 표고차=거리×경사(%)/100 누적.
+■ 임도 시방서(임도시설공사 표준시방서): 토공(굴착·성토·다짐)·배수공(횡배수관·종배수로·세월시설)·구조물공(옹벽·석축)·노면공(쇄석·자갈·포장)·사면보호공(떼·식생·낙석방지) 등. 세부 규격·수량은 시방서 원문 확인 필요.`;
+
+const SYSTEM_LITE=`당신은 강원도 엔지니어링사의 산림사업(풀베기·덩굴제거·어린나무가꾸기·솎아베기·조림·산림조사) 설계·감리 및 산지일시사용·소나무재선충병 방제 전문 보좌관이다. 공문·보고서·신고서는 음슴체(–함,–임)로 작성. 실무용어(임소반·표준지·감리원·기성·검측·준보전산지·임업용산지·공익용산지) 사용. 수치가 불확실하면 반드시 "관련 규정 확인 필요"로 표시하고 추측하지 않음. 답변은 복사해 쓸 수 있게 완성형으로. 웹 검색이 가능하면 국가법령정보센터·산림청 원문을 근거(조항·시행일)와 함께 인용.`;
+
+async function callClaudeOnce(content, search, systemText){
+  const body={model:'claude-sonnet-4-6',max_tokens:2000,messages:[{role:'user',content}]};
+  if(systemText) body.system=systemText;
+  if(search) body.tools=[{type:'web_search_20250305',name:'web_search'}];
+
+  let res;
+  try{
+    res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
+    });
+  }catch(netErr){
+    throw new Error('네트워크 연결 실패');
+  }
+
+  let data;
+  try{ data=await res.json(); }
+  catch(parseErr){ throw new Error('응답 읽기 실패 (상태 '+res.status+')'); }
+
+  if(!res.ok || (data && data.error)){
+    const msg=(data && data.error && data.error.message) ? data.error.message : ('요청 실패 (상태 '+res.status+')');
+    throw new Error(msg);
+  }
+  if(!Array.isArray(data.content)) throw new Error('예상과 다른 응답 구조');
+  const text=data.content.filter(b=>b && b.type==='text').map(b=>b.text).join('\n').trim();
+  if(!text) throw new Error('빈 응답');
+  return text;
+}
+
+async function callClaude(content, search){
+  // 1차: 전체 내장지식 시스템 프롬프트
+  try{
+    return await callClaudeOnce(content, search, SYSTEM);
+  }catch(e1){
+    // 2차 폴백: 축약 시스템 프롬프트로 재시도 (요청 과대 또는 형식 문제 대비)
+    try{
+      return await callClaudeOnce(content, search, SYSTEM_LITE);
+    }catch(e2){
+      // 3차 폴백: 시스템 프롬프트 없이 요청 안에 지침 포함
+      const merged=[{type:'text',text:'당신은 산림사업 설계·감리 전문 보좌관입니다. 공문·보고서는 음슴체(–함,–임)로 작성하고, 수치가 불확실하면 "관련 규정 확인 필요"로 표시합니다.\n\n'+(content[0]&&content[0].text?content[0].text:'')}];
+      return await callClaudeOnce(merged, search, null);
+    }
+  }
+}
+function parseJson(t){const c=t.replace(/```json|```/g,'').trim();const s=c.indexOf('{'),e=c.lastIndexOf('}');return JSON.parse(c.slice(s,e+1));}
+function showLoading(n,msg){const sec=document.getElementById('resultSec'+n);sec.style.display='block';document.getElementById('resultBox'+n).innerHTML=`<div class="loading"><div class="spin"></div>${msg}</div>`;sec.scrollIntoView({behavior:'smooth',block:'nearest'});}
+
+function ctx1(){
+  const rate=document.getElementById('rate').value, size=document.getElementById('plotSize').value, ha=document.getElementById('area').value;
+  let c=`[산정 조건] 구분: ${mode} · 사업종: ${document.getElementById('preset').value} · 조사비율 ${rate}% · 표준지 ${size}㎡ · 최소 ${MIN_CNT}개소`;
+  if(ha&&calcResult) c+=`\n[산정 결과] 사업면적 ${ha}ha → 표준지 ${calcResult.cnt}개소 (조사면적 ${calcResult.survey.toLocaleString()}㎡, 실제 ${calcResult.ratio.toFixed(2)}%)`;
+  return c;
+}
+function ctx2(){
+  const rows=[];
+  document.querySelectorAll('#lotRows tr').forEach(tr=>{
+    const jb=tr.querySelector('.jb').value.trim(), ar=tr.querySelector('.ar').value, gu=tr.querySelector('.gu').value;
+    if(jb) rows.push(`  · ${jb}${ar?` : ${ar}㎡`:''}${gu?` [${gu}]`:''}`);
+  });
+  if(!rows.length) return '';
+  return `[대상 필지]\n${rows.join('\n')}\n합계: ${document.getElementById('lotSum').textContent}㎡\n산지구분: 준보전 ${document.getElementById('aggJun').textContent}(${document.getElementById('aggJunP').textContent}) · 임업용 ${document.getElementById('aggIm').textContent}(${document.getElementById('aggImP').textContent}) · 공익용 ${document.getElementById('aggGong').textContent}(${document.getElementById('aggGongP').textContent})`;
+}
+
+function ctx5(){
+  const job=document.getElementById('feeJob').value;
+  const ha=document.getElementById('feeArea').value;
+  const sur=document.getElementById('feeSurcharge').value;
+  let c=`[용역비 산정 조건] 구분: ${feeMode==='설계'?'실시설계':'감리'} · 사업종: ${job}`;
+  if(ha) c+=` · 사업면적 ${ha}ha`;
+  if(sur&&sur!=='0') c+=` · 할증률 합계 ${sur}%`;
+  c+=` · 노임 ${feeWageYear==='2023'?'2023 기준(고급 280,031·초급 202,067원/일)':'직접입력'}`;
+  const final=document.getElementById('feeFinal').textContent;
+  if(ha&&final!=='0 원') c+=`\n[개략 산정 결과] 직접인건비 ${document.getElementById('feeDirect').textContent}원 → 최종 용역비 ${final} (제경비 110%·기술료 20%·부가세 10% 반영, 손해배상보험공제료 별도)`;
+  return c;
+}
+
+const xlsxData={1:null,2:null,3:null,4:null,5:null,6:null};
+
+async function run(n){
+  const btn=document.getElementById('runBtn'+n), box=document.getElementById('resultBox'+n);
+  const detail=document.getElementById('detail'+n).value.trim();
+  if(!detail){document.getElementById('resultSec'+n).style.display='block';box.innerHTML='<span class="err">요청 내용을 입력해 주세요.</span>';return;}
+
+  let ctx='';
+  if(n===1) ctx=ctx1()+'\n\n';
+  if(n===2){const c=ctx2(); if(c) ctx=c+'\n\n';}
+  if(n===3){const j=document.getElementById('refJob').value; if(j&&j!=='전체') ctx=`[대상 공종] ${j}\n\n`;}
+  if(n===5) ctx=ctx5()+'\n\n';
+  ctx+=`[요청] ${detail}`;
+
+  const wantXlsx=outMode[n]==='xlsx';
+  if(wantXlsx) ctx+=`\n\n[출력 형식] 반드시 아래 JSON만 출력(서두·백틱 없이). {"title":"제목","headers":["열1","열2"],"rows":[["값","값"]],"note":"비고 또는 근거(없으면 빈 문자열)"} 수치는 단위 포함 원문대로, 불확실하면 "확인 필요".`;
+
+  const useSearch=webMode[n];
+  const btnLabel=btn.textContent;
+  btn.disabled=true; btn.textContent='처리 중…';
+  document.getElementById('xlsxBtn'+n).style.display='none'; xlsxData[n]=null;
+  showLoading(n, useSearch?'국가법령정보센터 등에서 최신 자료를 확인하고 있습니다…':(wantXlsx?'자료를 표로 정리하고 있습니다…':'답변을 작성하고 있습니다…'));
+
+  try{
+    const text=await callClaude([{type:'text',text:ctx}], useSearch);
+    if(wantXlsx){
+      const j=parseJson(text); xlsxData[n]=j; renderTable(n,j);
+      document.getElementById('xlsxBtn'+n).style.display='block';
+    }else box.textContent=text;
+  }catch(e){
+    box.innerHTML='<span class="err">처리 중 오류가 발생했습니다.<br>사유: '+(e&&e.message?e.message:'알 수 없음')+'<br>웹검색을 껐다 켜거나, 요청 범위를 좁혀 다시 시도해 주세요.</span>';
+  }finally{ btn.disabled=false; btn.textContent=btnLabel; }
+}
+
+function renderTable(n,j){
+  const box=document.getElementById('resultBox'+n);
+  let h=''; if(j.title) h+=`<strong>${j.title}</strong>\n`;
+  h+='<div class="tbl-wrap"><table><thead><tr>';
+  (j.headers||[]).forEach(x=>h+=`<th>${x}</th>`); h+='</tr></thead><tbody>';
+  (j.rows||[]).forEach(r=>{h+='<tr>';r.forEach(v=>h+=`<td style="padding:7px 9px">${v??''}</td>`);h+='</tr>';});
+  h+='</tbody></table></div>';
+  if(j.note) h+=`\n<span style="font-size:12px;color:var(--muted)">${j.note}</span>`;
+  box.innerHTML=h;
+}
+async function downloadXlsx(n){
+  const j=xlsxData[n]; if(!j) return;
+  const headers=j.headers||[];
+  const rows=j.rows||[];
+  const title=j.title||'추출결과';
+
+  const wb=new ExcelJS.Workbook();
+  const ws=wb.addWorksheet('결과',{views:[{state:'frozen',ySplit:0}]});
+  const FONT='맑은 고딕';
+  const nCols=Math.max(1,headers.length);
+  const lastCol=String.fromCharCode(64+nCols);
+
+  // 1행: 제목
+  ws.mergeCells('A1:'+lastCol+'1');
+  const tCell=ws.getCell('A1');
+  tCell.value=title;
+  tCell.font={name:FONT,bold:true,size:14,color:{argb:'FF0E5132'}};
+  tCell.alignment={vertical:'middle',horizontal:'left'};
+  ws.getRow(1).height=28;
+
+  // 2행: 공백
+  ws.addRow([]);
+
+  // 3행: 헤더
+  const hRow=ws.addRow(headers);
+  hRow.height=24;
+  hRow.eachCell(c=>{
+    c.font={name:FONT,bold:true,size:11,color:{argb:'FFFFFFFF'}};
+    c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1F6B45'}};
+    c.alignment={vertical:'middle',horizontal:'center',wrapText:true};
+    c.border={top:{style:'thin',color:{argb:'FFB7C2BA'}},bottom:{style:'thin',color:{argb:'FFB7C2BA'}},left:{style:'thin',color:{argb:'FFB7C2BA'}},right:{style:'thin',color:{argb:'FFB7C2BA'}}};
+  });
+
+  // 데이터 행
+  rows.forEach((r,idx)=>{
+    const dRow=ws.addRow(r);
+    dRow.alignment={vertical:'middle',wrapText:true};
+    dRow.eachCell((c,col)=>{
+      c.font={name:FONT,size:10.5,bold:(col===1)};
+      c.alignment={vertical:'middle',horizontal:(col===1?'center':'left'),wrapText:true};
+      c.border={top:{style:'hair',color:{argb:'FFD5DCD6'}},bottom:{style:'hair',color:{argb:'FFD5DCD6'}},left:{style:'hair',color:{argb:'FFD5DCD6'}},right:{style:'hair',color:{argb:'FFD5DCD6'}}};
+      if(idx%2===1) c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF3F7F4'}};
+    });
+  });
+
+  // 비고
+  if(j.note){
+    ws.addRow([]);
+    const noteRow=ws.addRow(['비고: '+j.note]);
+    ws.mergeCells('A'+noteRow.number+':'+lastCol+noteRow.number);
+    const nc=ws.getCell('A'+noteRow.number);
+    nc.font={name:FONT,size:9,italic:true,color:{argb:'FF5F6B62'}};
+    nc.alignment={vertical:'top',horizontal:'left',wrapText:true};
+    noteRow.height=Math.min(120,24+Math.floor(j.note.length/Math.max(1,nCols*8))*14);
+  }
+
+  // 열 너비 — 각 열의 최대 글자수 기반(한글 폭 보정)
+  for(let col=1;col<=nCols;col++){
+    let maxLen=String(headers[col-1]||'').length;
+    rows.forEach(r=>{
+      const cell=String(r[col-1]??'');
+      // 한글은 폭이 넓으므로 가중치
+      const w=[...cell].reduce((s,ch)=>s+(ch.charCodeAt(0)>0x2E80?1.7:1),0);
+      if(w>maxLen) maxLen=w;
+    });
+    ws.getColumn(col).width=Math.min(48,Math.max(10,maxLen+2));
+  }
+
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=title.replace(/[\\/:*?"<>|]/g,'_')+'.xlsx';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+}
+function copyResult(n){
+  const t=document.getElementById('resultBox'+n).innerText;
+  navigator.clipboard.writeText(t).then(()=>{
+    const b=document.getElementById('copyBtn'+n); b.textContent='복사 완료'; setTimeout(()=>b.textContent='복사',1500);
+  });
+}
+</script>
+</body>
+</html>
